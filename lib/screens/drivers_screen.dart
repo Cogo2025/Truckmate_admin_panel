@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/api_service.dart';
 import '../models/user_models.dart';
 import '../widgets/admin_drawer.dart';
@@ -46,13 +47,13 @@ class _DriversScreenState extends State<DriversScreen> {
   List<Driver> get _filteredDrivers {
     List<Driver> filtered = _drivers;
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((driver) {
-        return driver.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            driver.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (driver.phone?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+      final lowerQuery = _searchQuery.toLowerCase();
+      filtered = filtered.where((d) {
+        return d.name.toLowerCase().contains(lowerQuery) ||
+            d.email.toLowerCase().contains(lowerQuery) ||
+            (d.phone?.toLowerCase().contains(lowerQuery) ?? false);
       }).toList();
     }
-
     switch (_selectedFilter) {
       case 'Active':
         filtered = filtered.where((d) => d.isAvailable).toList();
@@ -78,57 +79,51 @@ class _DriversScreenState extends State<DriversScreen> {
         elevation: 0,
         color: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: color.withOpacity(0.3), width: 1)),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withOpacity(0.1),
-                color.withOpacity(0.05),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 0),
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
-          ),
-          padding: const EdgeInsets.all(16),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: Offset(0, 0),
+                )
+              ]),
+          padding: EdgeInsets.all(16),
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      color,
-                      color.withOpacity(0.8),
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.5),
-                      blurRadius: 10,
-                      offset: const Offset(0, 0),
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [color, color.withOpacity(0.8)],
                     ),
-                  ],
-                ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.5),
+                        blurRadius: 10,
+                        offset: Offset(0, 0),
+                      )
+                    ]),
                 child: Icon(icon, size: 24, color: Colors.white),
               ),
-              const SizedBox(height: 8),
-              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text(title, style: const TextStyle(fontSize: 12, color: Colors.white70), textAlign: TextAlign.center),
+              SizedBox(height: 8),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+              Text(title,
+                  style: TextStyle(fontSize: 12, color: Colors.white70),
+                  textAlign: TextAlign.center),
             ],
           ),
         ),
@@ -136,10 +131,11 @@ class _DriversScreenState extends State<DriversScreen> {
     );
   }
 
-  Widget _buildVerificationChip(String status) {
+  Widget _buildVerificationChip(String? status) {
+    final st = (status ?? 'pending').toLowerCase();
     Color color;
     String text;
-    switch (status.toLowerCase()) {
+    switch (st) {
       case 'approved':
         color = Colors.green;
         text = 'Verified';
@@ -153,281 +149,333 @@ class _DriversScreenState extends State<DriversScreen> {
         text = 'Pending';
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.2), border: Border.all(color: color.withOpacity(0.5)), borderRadius: BorderRadius.circular(20)),
-      child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+          color: color.withOpacity(0.2),
+          border: Border.all(color: color.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(20)),
+      child: Text(text,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, {bool showCopyButton = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 120, child: Text('$label:', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w500))),
-          Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500))),
+          SizedBox(
+              width: 120,
+              child: Text(
+                '$label:',
+                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+              )),
+          Expanded(
+              child: Text(
+            value,
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+          )),
+          if (showCopyButton && value != 'N/A')
+            InkWell(
+              onTap: () async {
+                // Clipboard copy functionality, optional
+              },
+              child: Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.2),
+                  border: Border.all(color: Colors.blue.withOpacity(0.5)),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(Icons.copy, size: 16, color: Colors.blue),
+              ),
+            )
         ],
       ),
     );
   }
 
-  Widget _buildPhotoRow(BuildContext context, String? profilePhoto, String? licenseFront, String? licenseBack) {
-    if (profilePhoto == null && licenseFront == null && licenseBack == null) return const SizedBox.shrink();
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  Widget _buildDocumentThumbnail(BuildContext context, String imageUrl, String label) {
+    if (imageUrl.isEmpty) return SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (profilePhoto != null)
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FullscreenPhotoViewer(imageUrl: profilePhoto))),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Stack(
-                      children: [
-                        Image.network(profilePhoto, height: 150, fit: BoxFit.cover),
-                        Container(
-                          height: 150,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Colors.transparent, Colors.black.withOpacity(0.7)]),
-                          ),
-                          child: const Center(child: Icon(Icons.zoom_in, color: Colors.white, size: 40)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text('Profile Photo', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                ],
-              ),
+        Text(label,
+            style:
+                TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white70)),
+        SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => FullscreenPhotoViewer(imageUrl: imageUrl),
             ),
           ),
-        if (profilePhoto != null && (licenseFront != null || licenseBack != null)) const SizedBox(width: 16),
-        if (licenseFront != null)
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FullscreenPhotoViewer(imageUrl: licenseFront))),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Stack(
-                      children: [
-                        Image.network(licenseFront, height: 150, fit: BoxFit.cover),
-                        Container(
-                          height: 150,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Colors.transparent, Colors.black.withOpacity(0.7)]),
-                          ),
-                          child: const Center(child: Icon(Icons.zoom_in, color: Colors.white, size: 40)),
-                        ),
-                      ],
-                    ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                Image.network(
+                  imageUrl,
+                  height: 140,
+                  width: 140,
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  height: 140,
+                  width: 140,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black.withOpacity(0.7)])),
+                  child: Center(
+                    child: Icon(Icons.zoom_in, size: 32, color: Colors.white),
                   ),
-                  const SizedBox(height: 4),
-                  const Text('License Photo (Front)', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        if (licenseFront != null && licenseBack != null) const SizedBox(width: 16),
-        if (licenseBack != null)
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FullscreenPhotoViewer(imageUrl: licenseBack))),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Stack(
-                      children: [
-                        Image.network(licenseBack, height: 150, fit: BoxFit.cover),
-                        Container(
-                          height: 150,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Colors.transparent, Colors.black.withOpacity(0.7)]),
-                          ),
-                          child: const Center(child: Icon(Icons.zoom_in, color: Colors.white, size: 40)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text('License Photo (Back)', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                ],
-              ),
-            ),
-          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildDriverCard(Driver driver) {
+    final profile = driver.profile;
+    final verificationStatus = profile?.verificationStatus ?? 'pending';
+    final isVerified = verificationStatus.toLowerCase() == 'approved';
+
+    return Card(
+      elevation: 0,
+      color: Colors.transparent,
+      margin: EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+              color: isVerified ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
+              width: 1)),
+      child: Container(
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+                colors: [Color(0xFF1A1A22), Color(0xFF16161E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight),
+            boxShadow: [
+              BoxShadow(
+                  color: isVerified ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                  blurRadius: 10)
+            ]),
+        child: ExpansionTile(
+          leading: CircleAvatar(
+            radius: 25,
+            backgroundColor: Colors.blueGrey.withOpacity(0.7),
+            backgroundImage:
+                (profile?.profilePhoto != null && profile!.profilePhoto!.isNotEmpty)
+                    ? NetworkImage(profile.profilePhoto!)
+                    : null,
+            child: (profile?.profilePhoto == null || profile!.profilePhoto!.isEmpty)
+                ? Text(driver.name[0].toUpperCase(),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
+                : null,
+          ),
+          title: Text(
+            driver.name,
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.white),
+          ),
+          subtitle: Row(
+            children: [
+              Expanded(
+                  child:
+                      Text(driver.email, style: TextStyle(color: Colors.white70, fontSize: 12))),
+              _buildVerificationChip(verificationStatus),
+            ],
+          ),
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (profile != null) ...[
+                    _buildInfoRow('Phone', driver.phone ?? 'Not provided'),
+                    _buildInfoRow('License Number', profile.licenseNumber ?? 'N/A', showCopyButton: true),
+                    _buildInfoRow('Experience', profile.experience ?? 'N/A'),
+                    _buildInfoRow('Location', profile.location ?? 'N/A'),
+                    _buildInfoRow('Gender', profile.gender ?? 'N/A'),
+                    _buildInfoRow('Age', profile.age?.toString() ?? 'N/A'),
+                    if (profile.knownTruckTypes != null && profile.knownTruckTypes!.isNotEmpty)
+                      _buildInfoRow('Truck Types', profile.knownTruckTypes!.join(', ')),
+                    SizedBox(height: 12),
+                    Wrap(
+                      spacing: 16,
+                      alignment: WrapAlignment.start,
+                      children: [
+                        if (profile.profilePhoto != null && profile.profilePhoto!.isNotEmpty)
+                          _buildDocumentThumbnail(context, profile.profilePhoto!, 'Profile Photo'),
+                        if (driver.licensePhotoFront != null && driver.licensePhotoFront!.isNotEmpty)
+                          _buildDocumentThumbnail(context, driver.licensePhotoFront!, 'License Front'),
+                        if (driver.licensePhotoBack != null && driver.licensePhotoBack!.isNotEmpty)
+                          _buildDocumentThumbnail(context, driver.licensePhotoBack!, 'License Back'),
+                      ],
+                    )
+                  ] else
+                    Text(
+                      'Profile not completed',
+                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                    )
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: Color(0xFF121212),
       appBar: AppBar(
-        title: const Text('Drivers Management'),
+        title: Text('Drivers Management'),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
         flexibleSpace: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
-            ),
-            boxShadow: [
-              BoxShadow(color: theme.primaryColor.withOpacity(0.5), blurRadius: 20, offset: Offset(0, 0)),
-            ],
-          ),
+              gradient: LinearGradient(
+            colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadDrivers),
+          IconButton(
+            icon: Icon(Icons.refresh),
+            tooltip: 'Reload',
+            onPressed: _loadDrivers,
+          )
         ],
       ),
-      drawer: const AdminDrawer(),
+      drawer: AdminDrawer(),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1A1A1A), Color(0xFF16161F)],
-              ),
-              border: Border(
-                bottom: BorderSide(color: theme.primaryColor.withOpacity(0.3), width: 1),
-              ),
-            ),
+                border: Border(bottom: BorderSide(color: theme.primaryColor.withOpacity(0.3))),
+                gradient: LinearGradient(
+                    colors: [Color(0xFF1A1A1A), Color(0xFF16161F)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight)),
             child: Row(
               children: [
                 Expanded(
                   flex: 3,
                   child: TextField(
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Search drivers...',
-                      hintStyle: const TextStyle(color: Colors.white70),
-                      prefixIcon: Icon(Icons.search, color: theme.primaryColor),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.primaryColor)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.primaryColor.withOpacity(0.5))),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                    ),
-                    onChanged: (value) => setState(() => _searchQuery = value),
+                        prefixIcon: Icon(Icons.search, color: theme.primaryColor),
+                        hintText: 'Search drivers...',
+                        hintStyle: TextStyle(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white10,
+                        contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: theme.primaryColor)),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: theme.primaryColor.withOpacity(0.5)))),
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
                     value: _selectedFilter,
-                    dropdownColor: const Color(0xFF1A1A1A),
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.primaryColor)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.primaryColor.withOpacity(0.5))),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'All', child: Text('All Drivers')),
-                      DropdownMenuItem(value: 'Active', child: Text('Active Only')),
-                      DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
-                      DropdownMenuItem(value: 'Profile Complete', child: Text('Profile Complete')),
-                      DropdownMenuItem(value: 'Profile Incomplete', child: Text('Profile Incomplete')),
+                    items: [
+                      DropdownMenuItem(child: Text('All'), value: 'All'),
+                      DropdownMenuItem(child: Text('Active'), value: 'Active'),
+                      DropdownMenuItem(child: Text('Inactive'), value: 'Inactive'),
+                      DropdownMenuItem(child: Text('Profile Complete'), value: 'Profile Complete'),
+                      DropdownMenuItem(child: Text('Profile Incomplete'), value: 'Profile Incomplete'),
                     ],
-                    onChanged: (value) {
-                      if (value != null) setState(() => _selectedFilter = value);
+                    decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white10,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedFilter = val;
+                        });
+                      }
                     },
+                    style: TextStyle(color: Colors.white),
+                    dropdownColor: Color(0xFF1A1A1A),
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                _buildStatCard('Total Drivers', _drivers.length.toString(), Icons.local_shipping, Colors.blue),
-                const SizedBox(width: 16),
-                _buildStatCard('Active Drivers', _drivers.where((d) => d.isAvailable).length.toString(), Icons.online_prediction, Colors.green),
-                const SizedBox(width: 16),
-                _buildStatCard('Profile Complete', _drivers.where((d) => d.profile != null).length.toString(), Icons.check_circle, Colors.orange),
-                const SizedBox(width: 16),
-                _buildStatCard('Filtered Results', _filteredDrivers.length.toString(), Icons.filter_list, Colors.purple),
+                _buildStatCard('Total', _drivers.length.toString(), Icons.directions_car, Colors.blue),
+                SizedBox(width: 12),
+                _buildStatCard(
+                    'Active', _drivers.where((d) => d.isAvailable).length.toString(), Icons.check_circle, Colors.green),
+                SizedBox(width: 12),
+                _buildStatCard('Profiles', _drivers.where((d) => d.profile != null).length.toString(),
+                    Icons.person_outline, Colors.orange),
+                SizedBox(width: 12),
+                _buildStatCard('Filtered', _filteredDrivers.length.toString(), Icons.filter_alt, Colors.purple),
               ],
             ),
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: _loadDrivers,
               color: theme.primaryColor,
-              backgroundColor: const Color(0xFF1A1A1A),
+              onRefresh: _loadDrivers,
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                  : (_error != null
+                  ? Center(child: CircularProgressIndicator())
+                  : _error != null
                       ? Center(
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(colors: [Colors.red[800]!, Colors.red[600]!]),
-                                ),
-                                child: const Icon(Icons.error, size: 48, color: Colors.white),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(_error!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-                              const SizedBox(height: 16),
-                              ElevatedButton(onPressed: _loadDrivers, child: const Text('Retry')),
-                            ],
-                          ),
-                        )
-                      : (_filteredDrivers.isEmpty
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                            SizedBox(height: 12),
+                            Text(_error ?? 'Error loading drivers',
+                                style: TextStyle(color: Colors.redAccent)),
+                            SizedBox(height: 12),
+                            ElevatedButton(
+                                onPressed: _loadDrivers,
+                                child: Text('Retry'))
+                          ],
+                        ))
+                      : _filteredDrivers.isEmpty
                           ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(colors: [Colors.grey[800]!, Colors.grey[600]!]),
-                                    ),
-                                    child: const Icon(Icons.no_accounts, size: 48, color: Colors.white),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text('No drivers found', style: TextStyle(color: Colors.grey)),
-                                ],
-                              ),
+                              child: Text('No drivers found.', style: TextStyle(color: Colors.white54)),
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.all(16),
+                              padding: EdgeInsets.all(16),
                               itemCount: _filteredDrivers.length,
-                              itemBuilder: (context, index) => _buildStatCard(
-                                    _filteredDrivers[index].name,
-                                    _filteredDrivers[index].email,
-                                    Icons.directions_car,
-                                    Colors.blue,
-                                  )))),
+                              itemBuilder: (ctx, i) => _buildDriverCard(_filteredDrivers[i]),
+                            ),
             ),
           ),
         ],
@@ -436,7 +484,7 @@ class _DriversScreenState extends State<DriversScreen> {
   }
 }
 
-// FullscreenPhotoViewer as implemented earlier
+// Fullscreen image viewer for showing documents/photos
 class FullscreenPhotoViewer extends StatelessWidget {
   final String imageUrl;
   const FullscreenPhotoViewer({Key? key, required this.imageUrl}) : super(key: key);
@@ -445,17 +493,22 @@ class FullscreenPhotoViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0, iconTheme: const IconThemeData(color: Colors.white)),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: Center(
         child: InteractiveViewer(
-          panEnabled: true,
+          maxScale: 4.0,
           minScale: 0.5,
-          maxScale: 3.0,
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => const Center(child: Text("Failed to load image", style: TextStyle(color: Colors.white))),
-          ),
+          child: Image.network(imageUrl, fit: BoxFit.contain, errorBuilder: (ctx, err, stack) {
+            return Center(
+                child: Text(
+              'Failed to load image',
+              style: TextStyle(color: Colors.white70),
+            ));
+          }),
         ),
       ),
     );
